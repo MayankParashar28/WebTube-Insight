@@ -1,0 +1,12 @@
+.env
+*.db
+__pycache__/
+*.pyc
+.streamlit/
+static/
+temp/
+audio_*.mp3
+summary_*.pdf
+summary_*.txt
+summary_*.md
+.DS_Store
