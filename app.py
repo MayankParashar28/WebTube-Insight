@@ -10,7 +10,6 @@ else:
     ssl._create_default_https_context = _create_unverified_https_context
 from langchain_core.prompts import PromptTemplate
 from langchain_groq import ChatGroq
-from langchain.chains.summarize import load_summarize_chain
 from langchain_core.documents import Document
 from langchain_community.document_loaders import YoutubeLoader, WebBaseLoader
 import requests
@@ -138,6 +137,8 @@ def init_db():
     conn.commit()
     conn.close()
 
+init_db()
+
 def save_to_history(source, summary, context):
     try:
         conn = sqlite3.connect('summarizer_history.db')
@@ -178,17 +179,13 @@ with st.sidebar:
     st.header(" Settings")
     
     # API Key
-    env_api_key = os.environ.get("GROQ_API_KEY")
-    if env_api_key:
-        groq_api_key = env_api_key
-        pass
-    else:
+    groq_api_key = os.environ.get("GROQ_API_KEY")
+    if not groq_api_key:
         groq_api_key = st.text_input("Groq API Key", value=groq_api if groq_api else "", type="password")
-        st.caption("Tip: specificy `GROQ_API_KEY` in `.env` to avoid manual entry.")
 
     st.divider()
     
-    with st.expander("⚙️ Advanced Settings"):
+    with st.expander("Advanced Settings"):
       
         st.subheader("Model & Performance")
         model_options = {
@@ -213,7 +210,7 @@ with st.sidebar:
         output_language = st.selectbox("Output Language", options=["English", "Spanish", "French", "German", "Hindi", "Chinese", "Japanese"], index=0)
         
         st.divider()
-        st.subheader(" Focus Lens")
+        st.subheader("Focus Lens")
         focus_options = [
             "General", 
             "Technical Specs", 
@@ -235,7 +232,7 @@ with st.sidebar:
             st.caption(f"Active: Focusing on *{focus_area}*")
         # Session Management (Moved here for Zen)
         st.divider()
-        st.subheader(" Session Quota")
+        st.subheader("Session Quota")
         if "api_calls_count" not in st.session_state:
             st.session_state.api_calls_count = 0
         if "session_start" not in st.session_state:
@@ -252,7 +249,7 @@ with st.sidebar:
         st.caption(f"Status: {status_msg} | Resets in {int(remaining_sec//3600)}h {int((remaining_sec%3600)//60)}m")
         
         st.divider()
-        st.subheader("👤 Account Info")
+        st.subheader("Account Info")
         
         # Initialize Account Metrics
         if "session_id" not in st.session_state:
@@ -284,7 +281,7 @@ with st.sidebar:
     st.divider()
     st.header(" History")
     
-    search_history = st.text_input("🔍 Search History", placeholder="Filter by topic...", key="hist_search")
+    search_history = st.text_input("Search History", placeholder="Filter by topic...", key="hist_search")
     
     # We fetch more than 10 to allow for grouping and filtering, but only display TOP 3 in sidebar
     history_all = get_history(limit=50)
@@ -333,14 +330,14 @@ with st.sidebar:
         st.divider()
         col1, col2 = st.columns(2)
         with col1:
-             if st.button("👁️ View All", use_container_width=True):
+             if st.button("View All", use_container_width=True):
                  st.session_state.show_history_modal = True
         with col2:
              # CSV Export
              export_df = pd.DataFrame(history_all)
              st.download_button("📥 Export", data=export_df.to_csv(index=False), file_name="vellum_history.csv", mime="text/csv", use_container_width=True)
 
-    if st.button("🗑️ Clear All", type="secondary", use_container_width=True):
+    if st.button("Clear All", type="secondary", use_container_width=True):
         try:
             conn = sqlite3.connect('summarizer_history.db')
             c = conn.cursor()
@@ -351,7 +348,21 @@ with st.sidebar:
             st.rerun()
         except: pass
 
-# --- GLOBAL MODALS ---
+    # About
+    st.divider()
+    with st.expander("About Vellum"):
+        st.markdown("""
+        **Vellum v2.1**
+        
+        A premium orchestration layer for context-aware document intelligence.
+        
+        **Engine:** Llama 3.3 70B (Groq LPU)
+        **Core:** LangChain RAG-Lite
+        **Design:** Vellum Premium Glass
+        """)
+        st.caption("Developed for high-fidelity research and executive summarization.")
+
+
 if st.session_state.get('show_history_modal'):
     with st.expander("📂 FULL HISTORY LOG", expanded=True):
         df = get_all_history()
@@ -655,6 +666,7 @@ if st.button("Summarize", type="primary"):
                             </div>
                             """, unsafe_allow_html=True)
                             st.session_state.last_summary = full_response
+                            st.session_state.context = docs[0].page_content
                             
                             source_name = f"Research: {research_topic}" if input_method == "Topic Research" else (uploaded_file.name if uploaded_file else generic_url)
                             save_to_history(source_name, full_response, docs[0].page_content)
@@ -778,38 +790,55 @@ if st.session_state.last_summary:
 # Chat Interface
 if st.session_state.context:
     st.divider()
-    st.header("💬 Chat with Content")
+    c1, c2 = st.columns([4, 1])
+    with c1:
+        st.header("💬 Interview Document")
+    with c2:
+        if st.button("🧹 Clear Chat", use_container_width=True):
+            st.session_state.messages = []
+            st.rerun()
     
-    # Display chat messages
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    # Display chat messages with a container to prevent jumping
+    chat_container = st.container()
+    with chat_container:
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
     # Chat Input
-    if prompt := st.chat_input("Ask something about the content..."):
+    if user_query := st.chat_input("Ask a follow-up..."):
         # Add user message
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+        st.session_state.messages.append({"role": "user", "content": user_query})
+        with chat_container:
+            with st.chat_message("user"):
+                st.markdown(user_query)
 
         # Generate answer
-        with st.chat_message("assistant"):
-            chat_prompt_template = f"""
-            Answer the user's question based strictly on the content provided below.
-            
-            Context:
-            {st.session_state.context[:25000]}  # Limit context to avoid token limits if very large
-            
-            Question: {prompt}
-            
-            Answer:
-            """
-            try:
-                response_container = st.empty()
-                response_text = llm.invoke(chat_prompt_template).content
-                response_container.markdown(response_text)
+        with chat_container:
+            with st.chat_message("assistant"):
+                # RAG-lite Prompt
+                chat_prompt = f"""
+                You are Vellum AI, a research assistant. Use the following context to answer the question.
+                If the answer is not in the context, say you don't know based on the provided material.
+                Keep answers concise and professional.
                 
-                # Add assistant message
-                st.session_state.messages.append({"role": "assistant", "content": response_text})
-            except Exception as chat_err:
-                st.error(f"Failed to generate answer: {chat_err}")
+                Context:
+                {st.session_state.context[:20000]}
+                
+                Question: {user_query}
+                
+                Answer:
+                """
+                try:
+                    full_response = ""
+                    placeholder = st.empty()
+                    # Streaming for chat as well
+                    for chunk in llm.stream(chat_prompt):
+                        full_response += chunk.content
+                        placeholder.markdown(full_response + "▌")
+                    placeholder.markdown(full_response)
+                    
+                    # Add assistant message
+                    st.session_state.messages.append({"role": "assistant", "content": full_response})
+                except Exception as chat_err:
+                    st.error(f"Failed to generate answer: {chat_err}")

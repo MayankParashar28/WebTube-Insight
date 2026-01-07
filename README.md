@@ -1,37 +1,68 @@
-## WebTube Insight
+# 🪶 Vellum: Technical Architecture & System Design
 
-# A versatile summarization tool for YouTube videos and web content.
+**Vellum 2.1** is a high-performance orchestration layer designed for context-aware summarization and interactive document analysis. It leverages the **Groq LPU™ Inference Engine** for sub-second LLM latency and **LangChain** for robust data extraction.
 
-🚀 Overview
+---
 
-WebTube Insight enables users to quickly generate detailed summaries of YouTube videos and web pages by simply providing a URL. Built using powerful AI models and natural language processing,
-this tool extracts essential information, making it easy to grasp content without consuming the entire video or webpage.
+##  System Architecture
 
- # 🛠️ Features
-	•	YouTube Summarization: Get comprehensive summaries of YouTube videos, including title and description metadata.
-	•	Webpage Summarization: Extract key details from any webpage content using a user-friendly interface.
-	•	Responsive Interface: Built using Streamlit for seamless interaction and dynamic feedback.
-	•	AI-Powered Summarization: Powered by LangChain and the Groq model to ensure accurate, high-quality summaries.
-	•	Environment Variable Management: Easily configure API keys via .env files for enhanced security.
+Vellum is built on a modular four-layer architecture:
 
+### 1. Ingestion Layer
+-   **Structured Extraction**: Utilizes `yt-dlp` and `YoutubeLoader` for high-fidelity transcript retrieval.
+-   **Unstructured Scraping**: Employs `BeautifulSoup4` and `WebBaseLoader` for semantic content extraction from arbitrary URLs.
+-   **Multi-modal Support**: Integrated `pypdf` for document parsing and `yt-dlp` for video metadata sampling.
 
+### 2. Orchestration & RAG-Lite Layer
+-   **Prompt Engineering**: Dynamic `PromptTemplate` injection based on user-selected "Focus Lenses".
+-   **Context Tracking**: Implements a persistent `st.session_state` context store (sliding window up to 20k tokens) for multi-turn follow-ups.
+-   **Inference Engine**: Standardized on `llama-3.3-70b-versatile` for deep reasoning and `llama-3.1-8b-instant` for low-latency summarization tasks.
 
-# Prerequisites
-	•	Python 3.8+
-	•	pip (Python package manager)
-	•	Groq API key
+### 3. Data Persistence
+-   **Relational Storage**: SQLite3 backend with a normalized `history` schema for auditability and session persistence.
+-   **Schema**:
+    ```sql
+    CREATE TABLE history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      timestamp TEXT, source TEXT, summary TEXT, context TEXT
+    );
+    ```
 
- # 🎯 Usage
-	1.	Enter your Groq API key in the sidebar (auto-loaded if set in .env).
-	2.	Paste a YouTube or webpage URL into the input field.
-	3.	Click on Summarize to generate a detailed summary.
-	4.	Review the summary displayed on the main interface.
+### 4. Interface & Design System
+-   **Runtime**: [Streamlit](https://streamlit.io/) for Pythonic reactivity.
+-   **UI/UX (Vellum 2.0)**: Custom CSS injection for:
+    -   **Glassmorphism**: `backdrop-filter: blur(12px)` and subtle alpha-transparent overlays.
+    -   **Typography**: Outfit (Headers) and Inter (Body) font stacks.
+    -   **Reactivity**: Real-time token streaming using `llm.stream()` generator patterns.
 
- # 💡 Future Improvements
-	•	Support for multi-language summarization.
-	•	Integration with more advanced AI models for better accuracy.
-	•	Export summaries to PDF or text files.
+---
 
- # 📄 License
+##  Deployment & Environment
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+###  Containerized (DevContainer)
+Pre-configured logic for VS Code Remote Containers:
+-   **Base Image**: `python:3.11-slim`
+-   **System Binaries**: `ffmpeg` (audio/video processing), `libsqlite3-dev`, `build-essential`.
+-   **Port Mapping**: `8501:8501` (TCP)
+
+###  Local Manual Setup
+1.  **Dependencies**: `pip install -r requirements.txt`
+2.  **Auth**: Vellum looks for `GROQ_API_KEY` in the environment or a `.env` file (TOML format for Streamlit Cloud).
+3.  **Bootstrap**: `streamlit run app.py`
+
+---
+
+##  Technical Specifications
+
+| Feature | Implementation |
+| :--- | :--- |
+| **Summarization** | LangChain `PromptTemplate` + Groq LPU |
+| **Streaming** | Python Generator-based chunking |
+| **Mind Maps** | DOT Language + Graphviz Rendering |
+| **Audio** | gTTS + BytesIO streaming |
+| **Search** | DuckDuckGo Search API Wrapper |
+
+---
+
+## 📄 License
+MIT License. High-performance inference courtesy of Groq.
