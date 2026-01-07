@@ -16,3 +16,8 @@ duckduckgo-search
 gTTS
 pandas
 numexpr
+fastapi
+uvicorn
+httpx
+python-multipart
+python-dotenv

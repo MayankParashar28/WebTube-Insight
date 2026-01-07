@@ -4,19 +4,32 @@
 
 ---
 
-##  System Architecture
+## 🏗️ Technical Architecture (Vellum v2.1 SOA)
 
-Vellum is built on a modular four-layer architecture:
+Vellum has evolved into a modular **Service-Oriented Architecture (SOA)**, separating core intelligence from the user interface.
 
-### 1. Ingestion Layer
--   **Structured Extraction**: Utilizes `yt-dlp` and `YoutubeLoader` for high-fidelity transcript retrieval.
--   **Unstructured Scraping**: Employs `BeautifulSoup4` and `WebBaseLoader` for semantic content extraction from arbitrary URLs.
--   **Multi-modal Support**: Integrated `pypdf` for document parsing and `yt-dlp` for video metadata sampling.
+-   **🧠 Core Engine (`core/engine.py`)**: Stateless business logic, content extraction (YouTube, Web, OCR), and RAG orchestration.
+-   **⚙️ Backend API (`api/main.py`)**: A high-performance **FastAPI** REST layer that exposes Vellum's capabilities to any client.
+-   **🪶 Frontend Client (`app.py`)**: A premium **Streamlit** interface that communicates with the API via asynchronous streams.
 
-### 2. Orchestration & RAG-Lite Layer
--   **Prompt Engineering**: Dynamic `PromptTemplate` injection based on user-selected "Focus Lenses".
--   **Context Tracking**: Implements a persistent `st.session_state` context store (sliding window up to 20k tokens) for multi-turn follow-ups.
--   **Inference Engine**: Standardized on `llama-3.3-70b-versatile` for deep reasoning and `llama-3.1-8b-instant` for low-latency summarization tasks.
+### 🔌 REST Infrastructure
+-   `POST /summarize/url`: Decoupled URL ingestion and summarization.
+-   `POST /summarize/file`: Multi-modal file processing (PDF, Audio, Video, Image).
+-   `POST /chat`: Stateful 'Interview Mode' over REST.
+
+### 🛠️ New Execution Model
+To run Vellum in its modular state:
+```bash
+# Start both Backend and Frontend
+./start.sh
+```
+Or run them independently:
+```bash
+# Terminal 1: API
+uvicorn api.main:app --port 8000
+# Terminal 2: UI
+streamlit run app.py
+```
 
 ### 3. Data Persistence
 -   **Relational Storage**: SQLite3 backend with a normalized `history` schema for auditability and session persistence.
