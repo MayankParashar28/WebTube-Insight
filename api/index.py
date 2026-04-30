@@ -41,43 +41,52 @@ app = Flask(__name__, static_folder='../dist', static_url_path='/')
 CORS(app)
 
 USE_POSTGRES = bool(os.getenv("POSTGRES_URL"))
+IS_VERCEL = bool(os.getenv("VERCEL"))
+
+def get_db_path():
+    if IS_VERCEL:
+        return '/tmp/summarizer_history.db'
+    return 'summarizer_history.db'
 
 def get_db_connection():
     if USE_POSTGRES:
         conn = pg8000.connect(dsn=os.getenv("POSTGRES_URL"))
     else:
-        conn = sqlite3.connect('summarizer_history.db')
+        conn = sqlite3.connect(get_db_path())
     return conn
 
 def get_param():
     return "%s" if USE_POSTGRES else "?"
 
 def init_db():
-    conn = get_db_connection()
-    c = conn.cursor()
-    if USE_POSTGRES:
-        c.execute('''CREATE TABLE IF NOT EXISTS history
-                     (id SERIAL PRIMARY KEY, 
-                      timestamp TEXT, 
-                      source TEXT, 
-                      summary TEXT, 
-                      context TEXT)''')
-        c.execute("SELECT column_name FROM information_schema.columns WHERE table_name='history' and column_name='chat_history';")
-        if not c.fetchone():
-            c.execute("ALTER TABLE history ADD COLUMN chat_history TEXT")
-    else:
-        c.execute('''CREATE TABLE IF NOT EXISTS history
-                     (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                      timestamp TEXT, 
-                      source TEXT, 
-                      summary TEXT, 
-                      context TEXT)''')
-        c.execute("PRAGMA table_info(history)")
-        columns = [col[1] for col in c.fetchall()]
-        if "chat_history" not in columns:
-            c.execute("ALTER TABLE history ADD COLUMN chat_history TEXT")
-    conn.commit()
-    conn.close()
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        if USE_POSTGRES:
+            c.execute('''CREATE TABLE IF NOT EXISTS history
+                         (id SERIAL PRIMARY KEY, 
+                          timestamp TEXT, 
+                          source TEXT, 
+                          summary TEXT, 
+                          context TEXT)''')
+            c.execute("SELECT column_name FROM information_schema.columns WHERE table_name='history' and column_name='chat_history';")
+            if not c.fetchone():
+                c.execute("ALTER TABLE history ADD COLUMN chat_history TEXT")
+        else:
+            c.execute('''CREATE TABLE IF NOT EXISTS history
+                         (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                          timestamp TEXT, 
+                          source TEXT, 
+                          summary TEXT, 
+                          context TEXT)''')
+            c.execute("PRAGMA table_info(history)")
+            columns = [col[1] for col in c.fetchall()]
+            if "chat_history" not in columns:
+                c.execute("ALTER TABLE history ADD COLUMN chat_history TEXT")
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"DB init warning: {e}")
 
 init_db()
 
