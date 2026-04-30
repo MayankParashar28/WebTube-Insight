@@ -37,7 +37,7 @@ else:
 env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
 load_dotenv(env_path)
 
-app = Flask(__name__, static_folder='../frontend/dist', static_url_path='/')
+app = Flask(__name__, static_folder='../dist', static_url_path='/')
 CORS(app)
 
 USE_POSTGRES = bool(os.getenv("POSTGRES_URL"))
