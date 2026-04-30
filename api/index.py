@@ -253,9 +253,13 @@ def summarize():
     
     try:
         if input_method == "URL":
-            url = data.get('url')
-            if not url or not validators.url(url):
-                return jsonify({"error": "Invalid URL"}), 400
+            url = data.get('url', '').strip()
+            if not url:
+                return jsonify({"error": "Please enter a URL"}), 400
+            if not url.startswith(('http://', 'https://')):
+                url = 'https://' + url
+            if not validators.url(url):
+                return jsonify({"error": "Invalid URL format"}), 400
             docs = get_documents_from_url(url)
             source_name = url
             
