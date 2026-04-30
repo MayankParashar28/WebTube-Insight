@@ -2,13 +2,23 @@ import os
 import time
 import ssl
 import sqlite3
-import pg8000
 import base64
 import tempfile
-import validators
 import re
-import requests
-from bs4 import BeautifulSoup
+
+# Conditional imports — fail gracefully on Vercel if missing
+try:
+    import pg8000
+except ImportError:
+    pg8000 = None
+
+try:
+    import validators
+    import requests
+    from bs4 import BeautifulSoup
+except ImportError as e:
+    print(f"Optional import failed: {e}")
+
 from dotenv import load_dotenv
 
 from flask import Flask, request, jsonify, Response, stream_with_context, send_from_directory
@@ -23,8 +33,6 @@ from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 from groq import Groq
 
-from dotenv import load_dotenv
-
 # SSL setup
 try:
     _create_unverified_https_context = ssl._create_unverified_context
@@ -33,14 +41,14 @@ except AttributeError:
 else:
     ssl._create_default_https_context = _create_unverified_https_context
 
-# Load .env from parent directory since app is in backend/
+# Load .env from parent directory
 env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
 load_dotenv(env_path)
 
 app = Flask(__name__, static_folder='../dist', static_url_path='/')
 CORS(app)
 
-USE_POSTGRES = bool(os.getenv("POSTGRES_URL"))
+USE_POSTGRES = bool(os.getenv("POSTGRES_URL")) and pg8000 is not None
 IS_VERCEL = bool(os.getenv("VERCEL"))
 
 def get_db_path():
@@ -89,6 +97,17 @@ def init_db():
         print(f"DB init warning: {e}")
 
 init_db()
+
+@app.route('/api/health')
+def health():
+    return jsonify({
+        "status": "ok",
+        "postgres": USE_POSTGRES,
+        "vercel": IS_VERCEL,
+        "pg8000": pg8000 is not None,
+        "groq_key_set": bool(os.getenv("GROQ_API_KEY")),
+        "db_path": get_db_path() if not USE_POSTGRES else "postgres"
+    })
 
 def save_to_history(source, summary, context):
     try:
