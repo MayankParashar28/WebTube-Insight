@@ -1,0 +1,433 @@
+/* Professional Enterprise UI Theme */
+
+html, body, #root {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: #EDEDED;
+  margin: 0;
+  height: 100vh;
+  background-color: #0A0A0A; /* Deep matte black */
+  overflow: hidden;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: #FAFAFA;
+}
+
+/* App Layout */
+.app-container {
+  display: flex;
+  height: 100vh;
+}
+
+/* Minimalist Sidebar */
+.sidebar {
+  width: 280px;
+  background: #111111;
+  border-right: 1px solid #222;
+  padding: 24px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  padding: 48px 64px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  background: #0A0A0A;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.logo-emoji {
+  font-size: 2.5rem;
+  margin: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #FAFAFA;
+  letter-spacing: -0.04em;
+}
+
+.subtitle {
+  color: #888;
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #222;
+  margin: 24px 0;
+}
+
+/* Inputs and Selects */
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+input[type="password"],
+input[type="text"],
+input[type="file"],
+select {
+  width: 100%;
+  padding: 10px 14px;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #EDEDED;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  transition: border-color 0.15s ease;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #666;
+  background: #151515;
+}
+
+/* Segmented Control */
+.segmented-control {
+  display: flex;
+  background: #111;
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid #222;
+  margin-bottom: 32px;
+  width: max-content;
+}
+
+.segment-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.segment-btn:hover:not(.active) {
+  color: #EDEDED;
+}
+
+.segment-btn.active {
+  background: #222;
+  color: #FAFAFA;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+/* Input Section */
+.input-section {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.main-input {
+  flex: 1;
+}
+
+button.primary-btn {
+  padding: 10px 20px;
+  background: #EDEDED;
+  color: #000;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+button.primary-btn:hover:not(:disabled) {
+  background: #FFF;
+}
+
+button.primary-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+button.primary-btn:disabled {
+  background: #333;
+  color: #666;
+  cursor: not-allowed;
+}
+
+button.secondary-btn {
+  padding: 10px 16px;
+  background: #111;
+  color: #EDEDED;
+  border: 1px solid #333;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+button.secondary-btn:hover {
+  background: #1A1A1A;
+  border-color: #444;
+}
+
+/* Summary Result Box */
+.result-card {
+  padding: 32px;
+  background: #0A0A0A;
+  border-radius: 8px;
+  border: 1px solid #222;
+  margin: 24px 0;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  color: #D4D4D4;
+}
+
+.result-card h3 {
+  margin-top: 0;
+  font-size: 1.25rem;
+  color: #FAFAFA;
+  margin-bottom: 16px;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.tool-btn {
+  padding: 8px 16px;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #D4D4D4;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-weight: 500;
+  font-size: 0.85rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.tool-btn:hover:not(:disabled) {
+  background: #1A1A1A;
+  border-color: #555;
+  color: #FAFAFA;
+}
+
+.tool-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* History Sidebar */
+.history-section h4 {
+  margin: 20px 0 8px 0;
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.history-item-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  font-weight: 400;
+  font-size: 0.85rem;
+  margin-bottom: 2px;
+}
+
+.history-item-btn:hover {
+  background: #1A1A1A;
+  color: #EDEDED;
+}
+
+.clear-btn {
+  width: 100%;
+  margin-top: 24px;
+  background: #1A1111;
+  border-color: #3A1111;
+  color: #E57373;
+}
+
+.clear-btn:hover {
+  background: #2A1111;
+  border-color: #5A1111;
+}
+
+/* Chat Interface */
+.chat-interface {
+  background: #0A0A0A;
+  border: 1px solid #222;
+  border-radius: 8px;
+  padding: 32px;
+}
+
+.chat-interface h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.25rem;
+}
+
+.chat-window {
+  height: 400px;
+  overflow-y: auto;
+  border: 1px solid #222;
+  border-radius: 6px;
+  padding: 24px;
+  margin-bottom: 20px;
+  background: #111;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-placeholder {
+  color: #666;
+  text-align: center;
+  margin-top: auto;
+  margin-bottom: auto;
+  font-size: 0.95rem;
+}
+
+.chat-bubble {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  font-size: 0.95rem;
+}
+
+.chat-bubble.user {
+  background: #222;
+  color: #EDEDED;
+  margin-left: auto;
+  border: 1px solid #333;
+}
+
+.chat-bubble.assistant {
+  background: transparent;
+  border: none;
+  color: #D4D4D4;
+  margin-right: auto;
+  padding-left: 0;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.chat-input-row input {
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  background: #111;
+  border: 1px solid #333;
+}
+
+.chat-input-row input:focus {
+  border-color: #666;
+  background: #151515;
+}
+
+.primary-btn.small {
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+/* Mindmap and Audio */
+.audio-player {
+  margin: 24px 0;
+  width: 100%;
+}
+
+.audio-player audio {
+  width: 100%;
+  height: 40px;
+  outline: none;
+  border-radius: 6px;
+}
+
+.mindmap-container {
+  margin: 32px 0;
+  background: #111;
+  padding: 24px;
+  border-radius: 8px;
+  border: 1px solid #222;
+}
+
+.mindmap-container h3 {
+  color: #FAFAFA;
+  margin-top: 0;
+  font-size: 1.25rem;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+.markdown-content p, .chat-bubble p {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+.markdown-content p:last-child, .chat-bubble p:last-child {
+  margin-bottom: 0;
+}
+.markdown-content ul, .markdown-content ol, .chat-bubble ul, .chat-bubble ol {
+  margin-top: 0;
+  margin-bottom: 12px;
+  padding-left: 20px;
+}
+.markdown-content h1, .markdown-content h2, .markdown-content h3 {
+  margin-top: 24px;
+  margin-bottom: 12px;
+}
+.markdown-content h1:first-child, .markdown-content h2:first-child, .markdown-content h3:first-child {
+  margin-top: 0;
+}
