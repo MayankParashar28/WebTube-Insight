@@ -16,4 +16,5 @@ gTTS==2.5.1
 lxml>=5.1.0
 lxml_html_clean>=0.1.1
 httpx<0.28.0
+pg8000>=1.31.2
 

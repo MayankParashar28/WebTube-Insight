@@ -2,10 +2,7 @@ import os
 import time
 import ssl
 import sqlite3
-try:
-    import psycopg2
-except ImportError:
-    psycopg2 = None
+import pg8000
 import base64
 import tempfile
 import validators
@@ -47,7 +44,7 @@ USE_POSTGRES = bool(os.getenv("POSTGRES_URL"))
 
 def get_db_connection():
     if USE_POSTGRES:
-        conn = psycopg2.connect(os.getenv("POSTGRES_URL"), sslmode='require')
+        conn = pg8000.connect(dsn=os.getenv("POSTGRES_URL"))
     else:
         conn = sqlite3.connect('summarizer_history.db')
     return conn
