@@ -2,7 +2,10 @@ import os
 import time
 import ssl
 import sqlite3
-import psycopg2
+try:
+    import psycopg2
+except ImportError:
+    psycopg2 = None
 import base64
 import tempfile
 import validators
