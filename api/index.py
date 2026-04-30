@@ -2,6 +2,7 @@ import os
 import time
 import ssl
 import sqlite3
+import psycopg2
 import base64
 import tempfile
 import validators
@@ -39,22 +40,42 @@ load_dotenv(env_path)
 app = Flask(__name__, static_folder='../frontend/dist', static_url_path='/')
 CORS(app)
 
-DB_PATH = 'summarizer_history.db'
+USE_POSTGRES = bool(os.getenv("POSTGRES_URL"))
+
+def get_db_connection():
+    if USE_POSTGRES:
+        conn = psycopg2.connect(os.getenv("POSTGRES_URL"), sslmode='require')
+    else:
+        conn = sqlite3.connect('summarizer_history.db')
+    return conn
+
+def get_param():
+    return "%s" if USE_POSTGRES else "?"
 
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS history
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                  timestamp TEXT, 
-                  source TEXT, 
-                  summary TEXT, 
-                  context TEXT)''')
-    # Add chat_history column if it doesn't exist
-    c.execute("PRAGMA table_info(history)")
-    columns = [col[1] for col in c.fetchall()]
-    if "chat_history" not in columns:
-        c.execute("ALTER TABLE history ADD COLUMN chat_history TEXT")
+    if USE_POSTGRES:
+        c.execute('''CREATE TABLE IF NOT EXISTS history
+                     (id SERIAL PRIMARY KEY, 
+                      timestamp TEXT, 
+                      source TEXT, 
+                      summary TEXT, 
+                      context TEXT)''')
+        c.execute("SELECT column_name FROM information_schema.columns WHERE table_name='history' and column_name='chat_history';")
+        if not c.fetchone():
+            c.execute("ALTER TABLE history ADD COLUMN chat_history TEXT")
+    else:
+        c.execute('''CREATE TABLE IF NOT EXISTS history
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                      timestamp TEXT, 
+                      source TEXT, 
+                      summary TEXT, 
+                      context TEXT)''')
+        c.execute("PRAGMA table_info(history)")
+        columns = [col[1] for col in c.fetchall()]
+        if "chat_history" not in columns:
+            c.execute("ALTER TABLE history ADD COLUMN chat_history TEXT")
     conn.commit()
     conn.close()
 
@@ -62,11 +83,12 @@ init_db()
 
 def save_to_history(source, summary, context):
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = get_db_connection()
         c = conn.cursor()
         from datetime import datetime
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-        c.execute("INSERT INTO history (timestamp, source, summary, context) VALUES (?, ?, ?, ?)",
+        p = get_param()
+        c.execute(f"INSERT INTO history (timestamp, source, summary, context) VALUES ({p}, {p}, {p}, {p})",
                   (timestamp, source, summary, context))
         conn.commit()
         conn.close()
@@ -77,9 +99,10 @@ def save_to_history(source, summary, context):
 def get_history():
     limit = request.args.get('limit', 50, type=int)
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = get_db_connection()
         c = conn.cursor()
-        c.execute("SELECT id, timestamp, source, summary, context, chat_history FROM history ORDER BY id DESC LIMIT ?", (limit,))
+        p = get_param()
+        c.execute(f"SELECT id, timestamp, source, summary, context, chat_history FROM history ORDER BY id DESC LIMIT {p}", (limit,))
         history_items = [{"id": row[0], "timestamp": row[1], "source": row[2], "summary": row[3], "context": row[4], "chat_history": row[5]} for row in c.fetchall()]
         conn.close()
         return jsonify(history_items)
@@ -89,7 +112,7 @@ def get_history():
 @app.route('/api/history', methods=['DELETE'])
 def clear_history():
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = get_db_connection()
         c = conn.cursor()
         c.execute("DELETE FROM history")
         conn.commit()
@@ -382,9 +405,10 @@ def save_chat():
     chat_history_str = json.dumps(chat_messages)
     
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = get_db_connection()
         c = conn.cursor()
-        c.execute("UPDATE history SET chat_history = ? WHERE id = ?", (chat_history_str, history_id))
+        p = get_param()
+        c.execute(f"UPDATE history SET chat_history = {p} WHERE id = {p}", (chat_history_str, history_id))
         conn.commit()
         conn.close()
         return jsonify({"status": "success"})
