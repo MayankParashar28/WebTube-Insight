@@ -29,8 +29,6 @@ from langchain_core.prompts import PromptTemplate
 from langchain_groq import ChatGroq
 from langchain_core.documents import Document
 from langchain_community.document_loaders import YoutubeLoader, WebBaseLoader, PyPDFLoader
-from langchain_community.tools import DuckDuckGoSearchRun
-from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 from groq import Groq
 
 # SSL setup
@@ -208,27 +206,33 @@ def get_documents_from_url(url):
         return docs
 
 def get_documents_from_research(topic):
-    import asyncio
+    """Search DuckDuckGo directly via HTTP — no external search library needed."""
     try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        search_url = "https://html.duckduckgo.com/html/"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+        }
+        resp = requests.post(search_url, data={'q': topic}, headers=headers, timeout=10)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, 'html.parser')
         
-    wrapper = DuckDuckGoSearchAPIWrapper(max_results=10, backend="html") 
-    results = wrapper.results(topic, max_results=10)
-    
-    if not results:
-        search_run = DuckDuckGoSearchRun(api_wrapper=wrapper)
-        search_results_text = search_run.run(topic)
-        if not search_results_text or "No results found" in search_results_text:
+        results = []
+        for result in soup.find_all('div', class_='result__body')[:10]:
+            title_tag = result.find('a', class_='result__a')
+            snippet_tag = result.find('a', class_='result__snippet')
+            if title_tag:
+                title = title_tag.get_text(strip=True)
+                snippet = snippet_tag.get_text(strip=True) if snippet_tag else ''
+                results.append(f"--- SOURCE: {title} ---\n{snippet}")
+        
+        if not results:
             raise Exception("No search results found.")
+        
+        search_results_text = "\n\n".join(results)
         content = f"**RESEARCH TOPIC**: {topic}\n\n**SEARCH RESULTS**:\n{search_results_text}"
         return [Document(page_content=content)]
-    else:
-        search_results_text = "\n\n".join([f"--- SOURCE: {r['title']} ---\n{r['snippet']}" for r in results])
-        content = f"**RESEARCH TOPIC**: {topic}\n\n**SEARCH RESULTS**:\n{search_results_text}"
-        return [Document(page_content=content)]
+    except requests.RequestException as e:
+        raise Exception(f"Search failed: {e}")
 
 @app.route('/api/summarize', methods=['POST'])
 def summarize():

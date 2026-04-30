@@ -11,7 +11,6 @@ yt-dlp==2024.4.9
 youtube-transcript-api==0.6.2
 pypdf==4.2.0
 groq==0.5.0
-duckduckgo-search==5.3.0
 gTTS==2.5.1
 lxml>=5.1.0
 lxml_html_clean>=0.1.1
