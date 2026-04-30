@@ -205,34 +205,6 @@ def get_documents_from_url(url):
                 raise Exception(f"All scraping attempts failed: {fallback_err}")
         return docs
 
-def get_documents_from_research(topic):
-    """Search DuckDuckGo directly via HTTP — no external search library needed."""
-    try:
-        search_url = "https://html.duckduckgo.com/html/"
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
-        }
-        resp = requests.post(search_url, data={'q': topic}, headers=headers, timeout=10)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, 'html.parser')
-        
-        results = []
-        for result in soup.find_all('div', class_='result__body')[:10]:
-            title_tag = result.find('a', class_='result__a')
-            snippet_tag = result.find('a', class_='result__snippet')
-            if title_tag:
-                title = title_tag.get_text(strip=True)
-                snippet = snippet_tag.get_text(strip=True) if snippet_tag else ''
-                results.append(f"--- SOURCE: {title} ---\n{snippet}")
-        
-        if not results:
-            raise Exception("No search results found.")
-        
-        search_results_text = "\n\n".join(results)
-        content = f"**RESEARCH TOPIC**: {topic}\n\n**SEARCH RESULTS**:\n{search_results_text}"
-        return [Document(page_content=content)]
-    except requests.RequestException as e:
-        raise Exception(f"Search failed: {e}")
 
 @app.route('/api/summarize', methods=['POST'])
 def summarize():
@@ -310,13 +282,6 @@ def summarize():
             finally:
                 os.remove(tmp_path)
                 
-        elif input_method == "Topic Research":
-            topic = data.get('topic')
-            if not topic:
-                return jsonify({"error": "No topic provided"}), 400
-            docs = get_documents_from_research(topic)
-            source_name = f"Research: {topic}"
-            
         else:
             return jsonify({"error": "Invalid input method"}), 400
             

@@ -8,7 +8,6 @@ function App() {
   const [inputMethod, setInputMethod] = useState("URL");
   const [url, setUrl] = useState('');
   const [file, setFile] = useState(null);
-  const [topic, setTopic] = useState('');
   
   // Settings State
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -87,9 +86,8 @@ function App() {
   };
 
   const handleSummarize = async () => {
-    if (inputMethod === "URL" && !url) return alert("⚠️ Please enter a URL.");
-    if (inputMethod === "Upload File" && !file) return alert("⚠️ Please upload a file.");
-    if (inputMethod === "Topic Research" && !topic) return alert("⚠️ Please enter a topic.");
+    if (inputMethod === "URL" && !url) return alert("Please enter a URL.");
+    if (inputMethod === "Upload File" && !file) return alert("Please upload a file.");
 
     setLoading(true);
     setSummary('');
@@ -110,7 +108,6 @@ function App() {
 
       if (inputMethod === "URL") formData.append('url', url);
       if (inputMethod === "Upload File") formData.append('file', file);
-      if (inputMethod === "Topic Research") formData.append('topic', topic);
 
       const response = await fetch('/api/summarize', {
         method: 'POST',
@@ -405,7 +402,7 @@ function App() {
 
         {/* Segmented Control */}
         <div className="segmented-control">
-          {["URL", "Upload File", "Topic Research"].map(method => (
+          {["URL", "Upload File"].map(method => (
             <button 
               key={method}
               className={`segment-btn ${inputMethod === method ? 'active' : ''}`}
@@ -423,9 +420,6 @@ function App() {
           )}
           {inputMethod === "Upload File" && (
              <input type="file" onChange={e => setFile(e.target.files[0])} className="main-input" accept=".pdf,.txt,.mp3,.wav,.m4a,.mp4,.mov,.jpg,.jpeg,.png" />
-          )}
-          {inputMethod === "Topic Research" && (
-             <input type="text" value={topic} onChange={e => setTopic(e.target.value)} placeholder="e.g. Latest advancements in AI Agents" className="main-input" />
           )}
           
           <button onClick={handleSummarize} disabled={loading} className="primary-btn">

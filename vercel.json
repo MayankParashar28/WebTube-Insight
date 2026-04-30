@@ -1,4 +1,15 @@
 {
+  "functions": {
+    "api/index.py": {
+      "runtime": "@vercel/python@3.12.0",
+      "maxDuration": 30
+    }
+  },
+  "build": {
+    "env": {
+      "PYTHON_VERSION": "3.11"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
